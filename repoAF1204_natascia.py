@@ -15,22 +15,24 @@ def _(px):
     df = px.data.gapminder()
     years = sorted(df["year"].unique())
     continents = ["All"] + sorted(df["continent"].unique())
-    return continents, df, years
+    return df, years, continents
 
 
 @app.cell
 def _(mo):
-    mo.md("""
+    mo.md(
+        """
 # Natascia's Data Portfolio
 
 I am a finance student interested in financial data analysis, visualisation, and using Python to turn data into clear insights.
-""")
-    return
+"""
+    )
 
 
 @app.cell
 def _(mo):
-    mo.md("""
+    mo.md(
+        """
 ## About Me
 
 This project shows my skills in:
@@ -40,18 +42,19 @@ This project shows my skills in:
 - plotly
 - interactive visualisation
 - filtering and comparing data
-""")
-    return
+"""
+    )
 
 
 @app.cell
 def _(mo):
-    mo.md("""
+    mo.md(
+        """
 ## Project Overview
 
 This dashboard explores country-level development indicators using interactive data visualisations.
-""")
-    return
+"""
+    )
 
 
 @app.cell
@@ -70,30 +73,28 @@ def _(mo, years, continents):
         label="Select continent",
     )
 
-    controls = mo.vstack([year, continent])
-    controls
-    return continent, controls, year
+    mo.vstack([year, continent])
+    return year, continent
 
 
 @app.cell
 def _(df, year, continent):
     filtered = df[df["year"] == year.value]
-
     if continent.value != "All":
         filtered = filtered[filtered["continent"] == continent.value]
-
     return filtered,
 
 
 @app.cell
 def _(mo, year, continent):
-    mo.md(f"""
+    mo.md(
+        f"""
 ## Interactive Dashboard
 
 **Selected year:** {year.value}  
 **Selected continent:** {continent.value}
-""")
-    return
+"""
+    )
 
 
 @app.cell
@@ -109,7 +110,6 @@ def _(filtered, px, mo):
         log_x=True,
     )
     mo.ui.plotly(fig_scatter)
-    return
 
 
 @app.cell
@@ -122,7 +122,6 @@ def _(filtered, px, mo):
         title="Histogram: Distribution of Life Expectancy",
     )
     mo.ui.plotly(fig_hist)
-    return
 
 
 @app.cell
@@ -137,7 +136,6 @@ def _(filtered, px, mo):
         title="Bar Chart: Top 10 Countries by Population",
     )
     mo.ui.plotly(fig_bar)
-    return
 
 
 @app.cell
@@ -162,7 +160,6 @@ def _(df, continent, px, mo):
         )
 
     mo.ui.plotly(fig_line)
-    return
 
 
 @app.cell
@@ -176,7 +173,6 @@ def _(filtered, px, mo):
         title="Pie Chart: Population Share by Continent",
     )
     mo.ui.plotly(fig_pie)
-    return
 
 
 @app.cell
@@ -189,7 +185,6 @@ def _(filtered, px, mo):
         title="Density Plot: GDP per Capita and Life Expectancy",
     )
     mo.ui.plotly(fig_density)
-    return
 
 
 @app.cell
@@ -202,17 +197,17 @@ def _(filtered, px, mo):
         title="Box Plot: Life Expectancy by Continent",
     )
     mo.ui.plotly(fig_box)
-    return
 
 
 @app.cell
 def _(mo):
-    mo.md("""
+    mo.md(
+        """
 ## Finance Visualisation
 
 This section shows finance-related plots using technology stock data.
-""")
-    return
+"""
+    )
 
 
 @app.cell
@@ -250,7 +245,6 @@ def _(finance_df, stock, px, mo):
         title=f"Finance Line Chart: {stock.value} Price Over Time",
     )
     mo.ui.plotly(fig_fin_line)
-    return
 
 
 @app.cell
@@ -262,7 +256,6 @@ def _(finance_df, stock, px, mo):
         title=f"Finance Scatter Plot: {stock.value} Price Over Time",
     )
     mo.ui.plotly(fig_fin_scatter)
-    return
 
 
 @app.cell
@@ -274,7 +267,6 @@ def _(finance_df, stock, px, mo):
         title=f"Finance Histogram: {stock.value} Returns",
     )
     mo.ui.plotly(fig_fin_hist)
-    return
 
 
 @app.cell
@@ -285,25 +277,26 @@ def _(finance_df, stock, px, mo):
         title=f"Finance Box Plot: {stock.value} Returns",
     )
     mo.ui.plotly(fig_fin_box)
-    return
 
 
 @app.cell
 def _(mo):
-    mo.md("""
+    mo.md(
+        """
 ## Key Insights
 
 - Countries with higher GDP per capita often have higher life expectancy.
 - Population is concentrated in a small number of countries.
 - Continents show different development patterns.
 - Stock prices and returns can also be explored using visual tools.
-""")
-    return
+"""
+    )
 
 
 @app.cell
 def _(mo):
-    mo.md("""
+    mo.md(
+        """
 ## Contact
 
 - Name: Natascia Hossain
@@ -311,8 +304,8 @@ def _(mo):
 - Tools used: Python, marimo, plotly
 
 Thank you for viewing my portfolio webpage.
-""")
-    return
+"""
+    )
 
 
 if __name__ == "__main__":
