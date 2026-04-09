@@ -1,0 +1,352 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.22.4",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "5ab98f869d1c9f659780124718fcf5b8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "a8472599fc1eedc8f462deea117f9fbc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "bb24a574b2da8f38890e9a44b14c4384",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"natascias-data-portfolio\">Natascia's Data Portfolio</h1>\n<span class=\"paragraph\">I am a finance student interested in financial data analysis, visualisation, and using Python to turn data into clear insights.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "af4cf1b7fa51d40cff0211ec1506a04b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"about-me\">About Me</h2>\n<span class=\"paragraph\">This project shows my skills in:</span>\n<ul>\n<li>Python</li>\n<li>marimo</li>\n<li>plotly</li>\n<li>interactive visualisation</li>\n<li>filtering and comparing data</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "090d05e422ca5b383dc71c317202e0a1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"project-overview\">Project Overview</h2>\n<span class=\"paragraph\">This dashboard explores country-level development indicators using interactive data visualisations.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "7e48c09abe5854e9140b2047ce88f5c5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='PKri-0' random-id='a0e45c9b-665f-89df-d3c7-9b77126ce923'><marimo-slider data-initial-value='2007' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Select year&lt;/span&gt;&lt;/span&gt;&quot;' data-start='1952' data-stop='2007' data-step='5' data-steps='[]' data-debounce='false' data-disabled='false' data-orientation='&quot;horizontal&quot;' data-show-value='false' data-include-input='false' data-full-width='false'></marimo-slider></marimo-ui-element><marimo-ui-element object-id='PKri-1' random-id='8dcac3d7-8e47-7e52-7fb6-1ffb87b33223'><marimo-dropdown data-initial-value='[&quot;All&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Select continent&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;All&quot;,&quot;Africa&quot;,&quot;Americas&quot;,&quot;Asia&quot;,&quot;Europe&quot;,&quot;Oceania&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "803dec74d1a3d65baeb0ce7bcb10999f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "20665baee0248e559688412b408b7081",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"interactive-dashboard\">Interactive Dashboard</h2>\n<span class=\"paragraph\"><strong>Selected year:</strong> 2007<br />\n<strong>Selected continent:</strong> Africa</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "e40da047b6d510e5e1e54c8f88f3f194",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "68d8187b8a2e89691883f89ce16272cc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "e756d213f047f04898976461aa08d124",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "31112f30b11fbb797658ba52c5589ce3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "21cc704c482dda154c1c53616b375062",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "a635e0ed06228a7b649cbce6ed8b5e69",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "4aa470a05f7746cd46b31f17147f6e68",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "a76c05303d2d972a5f3c6543355f175e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"finance-visualisation\">Finance Visualisation</h2>\n<span class=\"paragraph\">This section shows finance-related plots using technology stock data.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "ab99c8dce3f3486e27785948ee5169c6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "9fbb1282ac71e73069e41e9a90170966",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='qnkX-0' random-id='e000fe60-3e81-60f1-4728-60b25f9470ec'><marimo-dropdown data-initial-value='[&quot;AAPL&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Select stock&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;AAPL&quot;,&quot;GOOG&quot;,&quot;AMZN&quot;,&quot;FB&quot;,&quot;NFLX&quot;,&quot;MSFT&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "266e6ef3dd6dd328c8755a257a9e17f6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "c94959af944fbb770223754b0f8d822d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "13610f040bf473e3967e68919679f717",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "6a5a9eb3673006086e7e6b1918a51e43",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "cf1cf44a6ca897978eadf2d5e791bc36",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "c35ee16bde7ae4b80aecb9a7f4e79444",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"key-insights\">Key Insights</h2>\n<ul>\n<li>Countries with higher GDP per capita often have higher life expectancy.</li>\n<li>Population is concentrated in a small number of countries.</li>\n<li>Continents show different development patterns.</li>\n<li>Stock prices and returns can also be explored using visual tools.</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "08261764996affc22688ba95498d124d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"contact\">Contact</h2>\n<ul>\n<li>Name: Natascia Hossain</li>\n<li>Course: AF1204 Introduction to Data Science and AI Tools</li>\n<li>Tools used: Python, marimo, plotly</li>\n</ul>\n<span class=\"paragraph\">Thank you for viewing my portfolio webpage.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": null,
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nHfw",
+      "code_hash": null,
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "xXTn",
+      "code_hash": null,
+      "outputs": [],
+      "console": []
+    }
+  ]
+}
