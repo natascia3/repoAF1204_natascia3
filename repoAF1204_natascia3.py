@@ -1,6 +1,16 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "marimo>=0.22.4",
+#     "pandas>=3.0.2",
+#     "plotly>=6.6.0",
+#     "uv>=0.11.6",
+# ]
+# ///
+
 import marimo
 
-__generated_with = "0.22.4"
+__generated_with = "0.23.0"
 app = marimo.App()
 
 
@@ -9,6 +19,7 @@ def _():
     import marimo as mo
     import pandas as pd
     import plotly.express as px
+
     return mo, pd, px
 
 
@@ -22,8 +33,7 @@ def _(pd):
 
     df["Debt_Cost_Percent"] = df["AvgCost_of_Debt"] * 100
     df["Market_Cap_B"] = df["Market_Cap"] / 1e9
-
-    return df
+    return (df,)
 
 
 @app.cell
@@ -43,18 +53,16 @@ def _(df, mo):
         value=0,
         label="Min Market Cap ($ Billions)",
     )
-
-    return sector_dropdown, cap_slider
+    return cap_slider, sector_dropdown
 
 
 @app.cell
-def _(df, sector_dropdown, cap_slider):
+def _(cap_slider, df, sector_dropdown):
     filtered = df[
         (df["Sector_Key"].isin(sector_dropdown.value)) &
         (df["Market_Cap_B"] >= cap_slider.value)
     ]
-
-    return filtered
+    return (filtered,)
 
 
 @app.cell
@@ -71,66 +79,62 @@ def _(filtered, mo, px):
     )
 
     chart = mo.ui.plotly(fig)
-
-    return chart
+    return (chart,)
 
 
 @app.cell
 def _(mo):
     tab_cv = mo.md("""
-### Natascia Hossain  
-**Aspiring Financial Analyst | Data & AI Enthusiast**
+    ### Natascia Hossain  
+    **Aspiring Financial Analyst | Data & AI Enthusiast**
 
----
+    ---
 
-### Summary
-- Finance student at Bayes Business School  
-- Skilled in Python, marimo, Plotly  
-- Interested in financial data analysis  
+    ### Summary
+    - Finance student at Bayes Business School  
+    - Skilled in Python, marimo, Plotly  
+    - Interested in financial data analysis  
 
----
+    ---
 
-### Education
-- BSc Accounting & Finance (2025–Present)
+    ### Education
+    - BSc Accounting & Finance (2025–Present)
 
----
+    ---
 
-### Skills
-- Python (Data Analysis)
-- Data Visualisation
-- Financial Analysis
-""")
-
-    return tab_cv
+    ### Skills
+    - Python (Data Analysis)
+    - Data Visualisation
+    - Financial Analysis
+    """)
+    return (tab_cv,)
 
 
 @app.cell
-def _(mo, chart, sector_dropdown, cap_slider):
+def _(cap_slider, chart, mo, sector_dropdown):
     tab_project = mo.vstack([
         mo.md("## 📊 Financial Dashboard"),
         mo.callout(mo.md("Explore how credit risk affects borrowing cost"), kind="info"),
         mo.hstack([sector_dropdown, cap_slider]),
         chart
     ])
-
-    return tab_project
+    return (tab_project,)
 
 
 @app.cell
 def _(mo):
     tab_personal = mo.md("""
-## 🌍 Personal Interests
+    ## 🌍 Personal Interests
 
-- Travelling  
-- Photography  
-- Learning about global markets  
-""")
-
-    return tab_personal
+    - Travelling  
+    - Photography  
+    - Learning about global markets  
+    """)
+    return (tab_personal,)
 
 
 @app.cell
-def _(mo, tab_cv, tab_project, tab_personal):
+def _(mo, tab_cv, tab_personal, tab_project):
     tabs = mo.ui.tabs({
         "📄 About Me": tab_cv,
         "📊 Projects": tab_project,
@@ -138,11 +142,10 @@ def _(mo, tab_cv, tab_project, tab_personal):
     })
 
     mo.md(f"""
-# Portfolio Website
----
-{tabs}
-""")
-
+    # Portfolio Website
+    ---
+    {tabs}
+    """)
     return
 
 
