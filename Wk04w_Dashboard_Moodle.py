@@ -1,7 +1,8 @@
 # /// script
-# requires-python = ">=3.13"
+# requires-python = ">=3.12"
 # dependencies = [
 #     "marimo>=0.19.10",
+#     "numpy>=1.26.0",
 #     "pandas>=2.3.3",
 #     "plotly>=6.5.1",
 #     "pyzmq>=27.1.0",

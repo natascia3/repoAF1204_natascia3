@@ -1,0 +1,174 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "marimo>=0.22.4",
+#     "pandas>=3.0.2",
+#     "plotly>=6.6.0",
+#     "uv>=0.11.6",
+# ]
+# ///
+
+import marimo
+
+__generated_with = "0.23.1"
+app = marimo.App()
+
+
+@app.cell
+def _():
+    import marimo as mo
+    import pandas as pd
+    import plotly.express as px
+
+    return mo, pd, px
+
+
+@app.cell
+def _(pd):
+    csv_url = "https://gist.githubusercontent.com/DrAYim/80393243abdbb4bfe3b45fef58e8d3c8/raw/ed5cfd9f210bf80cb59a5f420bf8f2b88a9c2dcd/sp500_ZScore_AvgCostofDebt.csv"
+
+    df = pd.read_csv(csv_url)
+    df = df.dropna(subset=["AvgCost_of_Debt", "Z_Score_lag", "Sector_Key"])
+    df = df[df["AvgCost_of_Debt"] < 5]
+
+    df["Debt_Cost_Percent"] = df["AvgCost_of_Debt"] * 100
+    df["Market_Cap_B"] = df["Market_Cap"] / 1e9
+    return (df,)
+
+
+@app.cell
+def _(df, mo):
+    sectors = sorted(df["Sector_Key"].unique().tolist())
+
+    sector_dropdown = mo.ui.multiselect(
+        options=sectors,
+        value=sectors[:3],
+        label="Filter by Sector",
+    )
+
+    cap_slider = mo.ui.slider(
+        start=0,
+        stop=200,
+        step=10,
+        value=0,
+        label="Min Market Cap ($ Billions)",
+    )
+    return cap_slider, sector_dropdown
+
+
+@app.cell
+def _(cap_slider, df, sector_dropdown):
+    filtered = df[
+        (df["Sector_Key"].isin(sector_dropdown.value)) &
+        (df["Market_Cap_B"] >= cap_slider.value)
+    ]
+    return (filtered,)
+
+
+@app.cell
+def _(filtered, mo, px):
+    fig = px.scatter(
+        filtered,
+        x="Z_Score_lag",
+        y="Debt_Cost_Percent",
+        color="Sector_Key",
+        size="Market_Cap_B",
+        hover_name="Name",
+        title="Cost of Debt vs Credit Risk",
+        template="presentation",
+    )
+
+    chart = mo.ui.plotly(fig)
+    return (chart,)
+
+
+@app.cell
+def _(mo):
+    tab_cv = mo.md("""
+    ### Natascia Hossain
+    **BSc Accounting & Finance Student | Aspiring Financial Analyst**
+
+    ---
+
+    ### Professional Profile
+    I am a 22-year-old student at Bayes Business School currently studying Accounting and Finance. I am dependable, motivated, and eager to learn, with a strong commitment to continuously improving my knowledge and skills.
+
+    Through five years of experience across different sectors, I have developed a strong work ethic, adaptability, and the ability to work effectively under pressure. I approach responsibilities with confidence, communicate clearly, and remain focused on delivering high-quality work even when managing strict deadlines and expectations.
+
+    I am particularly interested in combining financial knowledge with modern analytical tools such as Python, marimo, and data visualisation to better understand real-world business and finance problems.
+
+    ---
+
+    ### Education
+    - **BSc Accounting & Finance**, Bayes Business School (2025–Present)
+
+    ---
+
+    ### Key Skills
+    - Python for data analysis  
+    - Data visualisation  
+    - Financial analysis  
+    - Communication  
+    - Teamwork  
+    - Time management  
+    - Adaptability  
+    """)
+
+    return
+
+
+@app.cell
+def _(cap_slider, chart, mo, sector_dropdown):
+    tab_project = mo.vstack([
+        mo.md("## 📊 Financial Dashboard"),
+        mo.callout(mo.md("Explore how credit risk affects borrowing cost"), kind="info"),
+        mo.hstack([sector_dropdown, cap_slider]),
+        chart
+    ])
+    return
+
+
+@app.cell
+def _(app):
+    @app.cell
+    def _(mo):
+        tab_personal = mo.md("""
+    ## Personal Interests
+
+    - Painting and drawing
+    - Outdoor activities
+    - Gym
+
+    These interests help me stay creative, active, and disciplined outside of my academic work.
+    """)
+        return (tab_personal,)
+
+    return
+
+
+@app.cell
+def _(app):
+    @app.cell
+    def _(mo, tab_cv, tab_personal, tab_project):
+        tabs = mo.ui.tabs({
+            "📄 About Me": tab_cv,
+            "📊 Projects": tab_project,
+            "🌍 Interests": tab_personal
+        })
+
+        mo.md(f"""
+    # Natascia Hossain
+    ### BSc Accounting & Finance Student | Aspiring Financial Analyst
+
+    Welcome to my portfolio website. This page highlights my academic background, professional strengths, personal interests, and developing skills in financial analysis, Python, marimo, and data visualisation.
+
+    ---
+    {tabs}
+    """)
+        return
+
+    return
+
+
+if __name__ == "__main__":
+    app.run()
