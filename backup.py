@@ -24,9 +24,7 @@ def _():
 
 @app.cell
 def _(pd):
-    csv_url = "https://gist.githubusercontent.com/DrAYim/80393243abdbb4bfe3b45fef58e8d3c8/raw/ed5cfd9f210bf80cb59a5f420bf8f2b88a9c2dcd/sp500_ZScore_AvgCostofDebt.csv"
-
-    df = pd.read_csv(csv_url)
+    df = pd.read_csv("assets/sp500_ZScore_AvgCostofDebt.csv")
     df = df.dropna(subset=["AvgCost_of_Debt", "Z_Score_lag", "Sector_Key", "Market_Cap"])
     df = df[df["AvgCost_of_Debt"] < 0.15].copy()
 
