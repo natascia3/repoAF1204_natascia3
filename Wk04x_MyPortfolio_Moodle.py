@@ -1,486 +1,315 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "marimo>=0.22.4",
-#     "pandas>=3.0.2",
-#     "plotly>=6.6.0",
-#     "uv>=0.11.6",
+#     "marimo>=0.19.10",
+#     "pandas>=2.3.3",
+#     "plotly>=6.5.1",
+#     "pyarrow>=22.0.0",
+#     "pyzmq>=27.1.0",
 # ]
 # ///
 
 import marimo
 
-__generated_with = "0.23.0"
+__generated_with = "0.19.11"
 app = marimo.App()
 
 
 @app.cell
+def _(mo):
+    mo.md(r"""
+    ---
+    ## 🎓 Personal Portfolio Webpage
+    Combine everything learned so far (e.g., data loading, preparation, and visualization) into a multi-tabbed webpage featuring interactive chart and dashboard
+    """)
+    return
+
+
+@app.cell
 def _():
+
     import marimo as mo
     import pandas as pd
-    import plotly.express as px
-    return mo, pd, px
+
+    # Require micropip to install packages in the WASM environment
+    import micropip
+
+    return micropip, mo, pd
 
 
 @app.cell
 def _(pd):
+    # 1: Setup & Data Prep
+
+    # Get data ready for the dynamic webpage
+
+    # Note: The local-data-loading approach below does not work due to GitHub Pages compression issue
+    #===============================================================================================
+    # Must place data file in subfolder 'public' of the folder where the marimo notebook is located
+    # (required to locate and include the data when exporting as html-wasm)
+    # 
+    #filename = mo.notebook_location() / "public" / 'sp500_ZScore_AvgCostofDebt.csv'
+    #df_final = pd.read_csv(str(filename))
+
+    # Instead, use a raw gist URL approach to remotely load the data (already hosted online)  
+    #=======================================================================================
     csv_url = "https://gist.githubusercontent.com/DrAYim/80393243abdbb4bfe3b45fef58e8d3c8/raw/ed5cfd9f210bf80cb59a5f420bf8f2b88a9c2dcd/sp500_ZScore_AvgCostofDebt.csv"
 
-    df = pd.read_csv(csv_url)
+    df_final = pd.read_csv(csv_url)  # as opposed to pd.read_csv('public/sp500_ZScore_AvgCostofDebt.csv')
 
-    df = df.dropna(
-        subset=["AvgCost_of_Debt", "Z_Score_lag", "Sector_Key", "Market_Cap", "Name"]
-    ).copy()
-
-    df = df[df["AvgCost_of_Debt"] < 0.15].copy()
-
-    df["Debt_Cost_Percent"] = df["AvgCost_of_Debt"] * 100
-    df["Market_Cap_B"] = df["Market_Cap"] / 1e9
-    df["Z_Score_lag"] = df["Z_Score_lag"].round(2)
-    df["Debt_Cost_Percent"] = df["Debt_Cost_Percent"].round(2)
-    df["Market_Cap_B"] = df["Market_Cap_B"].round(2)
-
-    def classify_zone(z):
-        if z < 1.81:
-            return "Distress Zone"
-        elif z < 2.99:
-            return "Grey Zone"
-        else:
-            return "Safe Zone"
-
-    df["Risk_Zone"] = df["Z_Score_lag"].apply(classify_zone)
-
-    return (df,)
+    df_final = df_final.dropna(subset=['AvgCost_of_Debt', 'Z_Score_lag', 'Sector_Key'])
+    # Filter outliers to reduce distortion in visualizations
+    df_final = df_final[(df_final['AvgCost_of_Debt'] < 5)]   # 5 means 500%
+    #df_final = df_final[(df_final['AvgCost_of_Debt'] > 0) & (df_final['Z_Score_lag'] < 20)]
+    df_final['Debt_Cost_Percent'] = df_final['AvgCost_of_Debt'] * 100
+    return (df_final,)
 
 
 @app.cell
-def _(df, mo):
-    sectors = sorted(df["Sector_Key"].unique().tolist())
+def _(df_final, mo):
+    # 2: Define the UI Controls (The "Inputs")
 
-    max_cap = int((df["Market_Cap_B"].max() // 50 + 1) * 50)
+    # create the widgets here. In marimo, assigning them to a variable makes them available globally.
 
+    # 1. A Dropdown to select Sectors
+    all_sectors = sorted(df_final['Sector_Key'].unique().tolist())
     sector_dropdown = mo.ui.multiselect(
-        options=sectors,
-        value=sectors[:4],
+        options=all_sectors,
+        value=all_sectors[:3], # Default to first 3
         label="Filter by Sector",
-    )
+        )
+
+    # 2. A Slider for Market Cap (Size of company)
+    # Convert Market Cap to Billions for easier reading
+    df_final['Market_Cap_B'] = df_final['Market_Cap'] / 1e9
+    max_cap = int(df_final['Market_Cap_B'].max())
 
     cap_slider = mo.ui.slider(
-        start=0,
-        stop=max_cap,
-        step=10,
-        value=0,
-        label="Min Market Cap ($ Billions)",
-    )
-
+        start=0, 
+        stop=200,   # int(0.05*max_cap), 
+        step=10, 
+        value=0, # initial value
+        label="Min Market Cap ($ Billions)"
+        )
     return cap_slider, sector_dropdown
 
 
 @app.cell
-def _(cap_slider, df, sector_dropdown):
-    filtered = df[
-        (df["Sector_Key"].isin(sector_dropdown.value))
-        & (df["Market_Cap_B"] >= cap_slider.value)
-    ].copy()
+def _(cap_slider, df_final, sector_dropdown):
+    # 3: The Filter Logic (Reactive Data)
 
-    return (filtered,)
+    # This cell re-runs automatically when the user changes the slider or dropdown
 
+    # Filter the dataframe based on the UI inputs
+    filtered_portfolio = df_final[
+        (df_final['Sector_Key'].isin(sector_dropdown.value)) &
+        (df_final['Market_Cap_B'] >= cap_slider.value)
+        ]
 
-@app.cell
-def _(filtered):
-    company_count = len(filtered)
-
-    if company_count > 0:
-        avg_debt_cost = round(filtered["Debt_Cost_Percent"].mean(), 2)
-        median_z = round(filtered["Z_Score_lag"].median(), 2)
-        distressed_pct = round(
-            (filtered["Risk_Zone"].eq("Distress Zone").mean() * 100), 1
-        )
-    else:
-        avg_debt_cost = 0
-        median_z = 0
-        distressed_pct = 0
-
-    return avg_debt_cost, company_count, distressed_pct, median_z
+    # Calculate a quick summary metric
+    count = len(filtered_portfolio)
+    return count, filtered_portfolio
 
 
 @app.cell
-def _(avg_debt_cost, company_count, distressed_pct, median_z, mo):
-    kpi_row = mo.hstack(
-        [
-            mo.callout(
-                mo.md(f"### {company_count}\n**Companies Selected**"),
-                kind="neutral",
-            ),
-            mo.callout(
-                mo.md(f"### {avg_debt_cost}%\n**Average Cost of Debt**"),
-                kind="info",
-            ),
-            mo.callout(
-                mo.md(f"### {median_z}\n**Median Altman Z-Score**"),
-                kind="warn",
-            ),
-            mo.callout(
-                mo.md(f"### {distressed_pct}%\n**In Distress Zone**"),
-                kind="danger",
-            ),
-        ],
-        widths="equal",
-        gap=2,
-    )
-    return (kpi_row,)
+async def _(micropip):
+    # Await installation of plotly in the WASM environment
+    await micropip.install('plotly');
+
+    # What does await do here? 
+    # It pauses execution of the code until the package is installed, 
+    # considering that installing a package is an asynchronous operation 
+    # (which means taking some time to complete)
+
+    import plotly.express as px
+
+    return (px,)
 
 
 @app.cell
-def _(filtered, mo, px):
-    fig = px.scatter(
-        filtered,
-        x="Z_Score_lag",
-        y="Debt_Cost_Percent",
-        color="Sector_Key",
-        size="Market_Cap_B",
-        hover_name="Name",
-        hover_data={
-            "Sector_Key": True,
-            "Market_Cap_B": ":.2f",
-            "Risk_Zone": True,
-            "Z_Score_lag": ":.2f",
-            "Debt_Cost_Percent": ":.2f",
-        },
-        title="Cost of Debt vs Credit Risk",
-        labels={
-            "Z_Score_lag": "Altman Z-Score",
-            "Debt_Cost_Percent": "Cost of Debt (%)",
-            "Sector_Key": "Sector",
-            "Market_Cap_B": "Market Cap ($B)",
-        },
-        template="presentation",
-        width=950,
-        height=620,
-    )
+def _(count, filtered_portfolio, mo, pd, px):
+    # 4: The Visualizations
 
-    fig.add_vline(x=1.81, line_dash="dash", line_color="red")
-    fig.add_vline(x=2.99, line_dash="dash", line_color="green")
+    # Create the plots based on the filtered data.
 
-    fig.add_annotation(
-        x=1.81,
-        y=1.02,
-        yref="paper",
-        text="Distress threshold",
-        showarrow=False,
-        font=dict(size=11),
-    )
-
-    fig.add_annotation(
-        x=2.99,
-        y=1.02,
-        yref="paper",
-        text="Safe threshold",
-        showarrow=False,
-        font=dict(size=11),
-    )
-
-    scatter_chart = mo.ui.plotly(fig)
-    return (scatter_chart,)
-
-
-@app.cell
-def _(filtered, mo, px):
-    hist_fig = px.histogram(
-        filtered,
-        x="Z_Score_lag",
-        color="Sector_Key",
-        nbins=25,
-        title="Distribution of Altman Z-Scores",
-        labels={
-            "Z_Score_lag": "Altman Z-Score",
-            "Sector_Key": "Sector",
-        },
-        template="presentation",
-        width=950,
-        height=500,
-        barmode="overlay",
-        opacity=0.72,
-    )
-
-    hist_chart = mo.ui.plotly(hist_fig)
-    return (hist_chart,)
-
-
-@app.cell
-def _(filtered, mo, px):
-    box_fig = px.box(
-        filtered,
-        x="Sector_Key",
-        y="Debt_Cost_Percent",
-        color="Sector_Key",
-        title="Cost of Debt by Sector",
-        labels={
-            "Sector_Key": "Sector",
-            "Debt_Cost_Percent": "Cost of Debt (%)",
-        },
-        template="presentation",
-        width=950,
-        height=560,
-        points="outliers",
-    )
-
-    box_fig.update_layout(xaxis_tickangle=-30)
-
-    box_chart = mo.ui.plotly(box_fig)
-    return (box_chart,)
-
-
-@app.cell
-def _(filtered, mo, px):
-    risk_summary = (
-        filtered.groupby("Risk_Zone", as_index=False)["Debt_Cost_Percent"]
-        .mean()
-        .sort_values("Debt_Cost_Percent", ascending=False)
-    )
-
-    zone_order = ["Distress Zone", "Grey Zone", "Safe Zone"]
-
-    risk_bar_fig = px.bar(
-        risk_summary,
-        x="Risk_Zone",
-        y="Debt_Cost_Percent",
-        color="Risk_Zone",
-        category_orders={"Risk_Zone": zone_order},
-        title="Average Cost of Debt by Risk Zone",
-        labels={
-            "Risk_Zone": "Risk Zone",
-            "Debt_Cost_Percent": "Average Cost of Debt (%)",
-        },
-        template="presentation",
-        width=950,
-        height=500,
-        text_auto=".2f",
-    )
-
-    risk_bar_chart = mo.ui.plotly(risk_bar_fig)
-    return (risk_bar_chart,)
-
-
-@app.cell
-def _(filtered, mo):
-    if len(filtered) == 0:
-        top_risk_md = mo.md("No companies match the selected filters.")
-    else:
-        top_risk = filtered.nsmallest(5, "Z_Score_lag")[
-            [
-                "Name",
-                "Sector_Key",
-                "Z_Score_lag",
-                "Debt_Cost_Percent",
-                "Market_Cap_B",
-                "Risk_Zone",
-            ]
-        ].copy()
-
-        lines = []
-        for _, row in top_risk.iterrows():
-            lines.append(
-                f"- **{row['Name']}** ({row['Sector_Key']}) — "
-                f"Z-Score: **{row['Z_Score_lag']}**, "
-                f"Cost of Debt: **{row['Debt_Cost_Percent']}%**, "
-                f"Market Cap: **${row['Market_Cap_B']}B**, "
-                f"Zone: **{row['Risk_Zone']}**"
-            )
-
-        top_risk_md = mo.md(
-            "### Highest-Risk Companies in Current Selection\n\n"
-            + "\n".join(lines)
+    #=========================================
+    # Plot 1: The Financial Analysis (Scatter)
+    #=========================================
+    fig_portfolio = px.scatter(
+        filtered_portfolio,
+        x='Z_Score_lag', 
+        y='Debt_Cost_Percent',
+        color='Sector_Key',
+        size='Market_Cap_B',
+        hover_name='Name',
+        title=f"Cost of Debt vs. Z-Score ({count} observations)",
+        labels={'Z_Score_lag': 'Altman Z-Score (lagged)', 'Debt_Cost_Percent': 'Avg. Cost of Debt (%)'},
+        # template='presentation' gives a clean look with larger fonts
+        template='presentation',    # 'presentation' # plotly_white  # 'plotly' (default) 
+        width=900,
+        height=600
         )
 
-    return (top_risk_md,)
+    # Add a vertical line for the "Distress" threshold (1.81)
+    fig_portfolio.add_vline(x=1.81, line_dash="dash", line_color="red", 
+        annotation=dict(
+            text="Distress Threshold (Z-Score = 1.81)",
+            font=dict(color="red"),
+            x=1.5, xref="x",
+            # x is interpreted in the x-axis data coordinates (or category label)
+            y=1.07, yref="paper",
+            # y is interpreted as a fraction of the plotting area (0 = bottom, 1 = top).
+            showarrow=False,
+            yanchor="top"
+            ) 
+        )
+
+    # Add a vertical line for the "Safe" threshold (2.99)
+    fig_portfolio.add_vline(x=2.99, line_dash="dash", line_color="green", 
+        annotation=dict(
+            text="Safe Threshold (Z-Score = 2.99)",
+            font=dict(color="green"),
+            x=3.10, xref="x",
+            y=1.02, yref="paper",
+            showarrow=False,
+            yanchor="top"
+            ) 
+        )
 
 
-@app.cell
-def _(filtered, mo):
-    if len(filtered) == 0:
-        insight_text = """
-### Analytical Insight
-No observations are available under the current filters. Try selecting more sectors or lowering the market capitalisation threshold.
-"""
-    else:
-        distress = filtered[filtered["Risk_Zone"] == "Distress Zone"]
-        safe = filtered[filtered["Risk_Zone"] == "Safe Zone"]
+    # #==============================================
+    # # Calculate regression line points
+    # import numpy as np
+    # # use the same dataframe used for the scatter (filtered_portfolio) and plotted y (Debt_Cost_Percent)
+    # #   after filtering out extreme outliers (with Debt_Cost_Percent >= 5, i.e., 500%)
+    # df_regline = filtered_portfolio[
+    #    (filtered_portfolio['Debt_Cost_Percent'] < 5) # Assuming decimal format (0.15 = 15%)
+    #    ]
+    # 
+    # # Only calculate regression if there are data points
+    # if not df_regline.empty:
+    #     x = df_regline['Z_Score_lag'].astype(float)
+    #     y = df_regline['Debt_Cost_Percent'].astype(float)
 
-        if len(distress) > 0:
-            distress_avg = round(distress["Debt_Cost_Percent"].mean(), 2)
-        else:
-            distress_avg = None
+    #     # get slope & intercept of the regression line
+    #     slope, intercept = np.polyfit(x, y, 1)
 
-        if len(safe) > 0:
-            safe_avg = round(safe["Debt_Cost_Percent"].mean(), 2)
-        else:
-            safe_avg = None
+    #     # create x-range for a smooth line
+    #     x_line = np.linspace(x.min(), x.max(), 100)
+    #     y_line = intercept + slope * x_line
 
-        largest_sector = filtered["Sector_Key"].value_counts().idxmax()
+    #     # add regression line to existing fig
+    #     line_trace = px.line(x=x_line, y=y_line#, labels={'x':'Z_Score_lag','y':'Debt_Cost_Percent'}
+    #     ).data[0]
+    #     line_trace.update(line=dict(width=0.5, color='black'))
 
-        if distress_avg is not None and safe_avg is not None:
-            spread = round(distress_avg - safe_avg, 2)
-            insight_text = f"""
-### Analytical Insight
-The filtered data suggests a meaningful relationship between **financial health** and **borrowing cost**.  
-Companies in the **Distress Zone** have an average cost of debt of **{distress_avg}%**, compared with **{safe_avg}%** for firms in the **Safe Zone**.  
-This implies a borrowing cost gap of **{spread} percentage points**, supporting the idea that lenders demand higher returns from firms with weaker balance-sheet strength.
+    #     fig_portfolio.add_trace(line_trace)
+    # #==============================================
 
-The largest group in the current selection is **{largest_sector}**, which means the sector mix can materially affect the overall distribution shown in the charts.  
-Overall, the dashboard indicates that stronger Altman Z-Scores are generally associated with lower financing pressure and better credit quality.
-"""
-        else:
-            insight_text = f"""
-### Analytical Insight
-The current filtered view does not include enough firms in both the **Distress Zone** and **Safe Zone** to compare average borrowing costs directly.  
-However, the selected companies still show how sector composition and company size can influence the distribution of Altman Z-Scores and cost of debt.
-
-The largest group in the current selection is **{largest_sector}**.  
-This dashboard remains useful for identifying which sectors contain more financially vulnerable firms and where borrowing costs appear most dispersed.
-"""
-
-    insight_md = mo.md(insight_text)
-    return (insight_md,)
+    # Wrap the plot in a marimo UI element
+    chart_element = mo.ui.plotly(fig_portfolio)
 
 
-@app.cell
-def _(mo):
-    tab_cv = mo.md("""
-### Natascia Hossain  
-**BSc Accounting & Finance Student | Aspiring Financial Analyst**
-
----
-
-### Professional Profile
-I am a BSc Accounting and Finance student at Bayes Business School with a strong interest in financial analysis, Python, marimo, and data visualisation. I enjoy using data tools to explore real-world business problems and communicate insights clearly.
-
-Through academic coursework and work experience, I have developed strong communication, teamwork, adaptability, and time management skills. I am motivated to continue building both my technical and analytical abilities.
-
----
-
-### Education
-- **BSc Accounting & Finance**, Bayes Business School (2025–Present)
-
----
-
-### Key Skills
-- Python for Data Analysis  
-- Data Visualisation with Plotly  
-- Financial Analysis  
-- Interactive Dashboards with marimo  
-- Communication  
-- Teamwork  
-- Time Management  
-- Adaptability  
-""")
-    return (tab_cv,)
-
-
-@app.cell
-def _(
-    box_chart,
-    cap_slider,
-    hist_chart,
-    insight_md,
-    kpi_row,
-    mo,
-    risk_bar_chart,
-    scatter_chart,
-    sector_dropdown,
-    top_risk_md,
-):
-    tab_project = mo.vstack([
-        mo.md("""
-## 📊 Financial Data Analysis Project
-
-This interactive portfolio project investigates the relationship between **credit risk** and **cost of debt** using S&P 500 company data. The analysis focuses on the **Altman Z-Score** as a measure of financial health and examines how borrowing costs vary across sectors and company sizes.
-
----
-
-### Project Aim
-The purpose of this dashboard is to show how financial strength can influence a firm's access to external finance. In particular, it explores whether firms with lower Z-Scores, indicating greater financial distress, tend to face higher borrowing costs.
-
----
-
-### Skills Demonstrated
-- Data cleaning and transformation using **pandas**
-- Interactive dashboard design using **marimo**
-- Financial visualisation using **Plotly**
-- Application of the **Altman Z-Score** to assess default risk
-- Comparative analysis across sectors and market capitalisation ranges
-- Interpretation of credit risk patterns for business decision-making
-
----
-
-### Why This Project Stands Out
-This project combines financial theory with interactive data analysis rather than only presenting static charts. Users can adjust the sector mix and firm size threshold to test how conclusions change under different market conditions. This makes the dashboard more analytical, exploratory, and suitable for professional portfolio use.
-
-**Red dashed line:** Distress threshold (**1.81**)  
-**Green dashed line:** Safe threshold (**2.99**)
-"""),
-        mo.callout(
-            mo.md(
-                "Use the controls below to explore how **sector** and **company size** influence credit risk and borrowing costs."
-            ),
-            kind="info",
-        ),
-        kpi_row,
-        mo.hstack([sector_dropdown, cap_slider], justify="start", gap=2),
-        scatter_chart,
-        hist_chart,
-        box_chart,
-        risk_bar_chart,
-        insight_md,
-        top_risk_md,
-        mo.callout(
-            mo.md("""
-### Conclusion
-Overall, the dashboard suggests that firms with weaker financial health generally face **higher borrowing costs**, while firms in stronger financial positions tend to benefit from cheaper access to debt finance. This supports the view that credit quality is an important determinant of corporate financing conditions.
-
-The project demonstrates my ability to use Python-based tools to transform financial data into clear, interactive, and decision-relevant insights.
-"""),
-            kind="success",
-        ),
-    ])
-    return (tab_project,)
-
-
-@app.cell
-def _(mo):
-    tab_personal = mo.md("""
-## 🌍 Personal Interests
-
-- Painting and drawing  
-- Outdoor activities  
-- Gym  
-
-These interests help me stay creative, active, and disciplined outside of my academic work.
-""")
-    return (tab_personal,)
-
-
-@app.cell
-def _(mo, tab_cv, tab_personal, tab_project):
-    tabs = mo.ui.tabs({
-        "📄 About Me": tab_cv,
-        "📊 Projects": tab_project,
-        "🌍 Interests": tab_personal,
+    #=========================================
+    # Plot 2: Personal Travel Map (Hardcoded demo data for the 'Hobbies' tab)
+    #=========================================
+    # This simulates travel history data  
+    travel_data = pd.DataFrame({
+        'City': ['London', 'New York', 'Tokyo', 'Sydney', 'Paris'],
+        'Lat': [51.5, 40.7, 35.6, -33.8, 48.8],
+        'Lon': [-0.1, -74.0, 139.6, 151.2, 2.3],
+        'Visit_Year_str': ['2022', '2023', '2024', '2021', '2023']
     })
-    return (tabs,)
+
+    years = sorted(travel_data['Visit_Year_str'].unique(), key=int)  # -> ['2021','2022','2023','2024']
+
+    fig_travel = px.scatter_geo(
+        travel_data,
+        lat='Lat', lon='Lon',
+        hover_name='City',
+        color='Visit_Year_str',
+        category_orders={'Visit_Year_str': years},
+        color_discrete_sequence=px.colors.qualitative.Plotly,
+        projection="natural earth",
+        title="My Travel Footprint",
+        #template='plotly_white',
+        labels={'Visit_Year_str': 'Visit Year'}
+    )
+
+    fig_travel.update_traces(marker=dict(size=12)); # use trailing semicolon to suppress output
+    return chart_element, fig_travel
 
 
 @app.cell
-def _(mo, tabs):
-    mo.md(f"""
-# Natascia Hossain  
-### BSc Accounting & Finance Student | Aspiring Financial Analyst  
+def _(cap_slider, chart_element, fig_travel, mo, sector_dropdown):
+    # 5: The "Portfolio" Layout (a Multi-Tab Webpage)
 
-Welcome to my personal portfolio website. This platform showcases my work in financial data analysis, where I apply Python, marimo, and data visualisation techniques to explore real-world financial insights.
+    # Combine everything into a polished, tabbed interface using Markdown and mo.ui.tabs.
 
----
-{tabs}
-""")
+    # Define the content for each tab
+
+    # --- Tab 1: CV / Profile ---
+    # Using standard Markdown for formatting
+    tab_cv = mo.md(
+        """
+        ### Aspiring Financial Analyst | Data Science Enthusiast
+
+        **Summary:**
+        - Passionate about uncovering market insights using modern data tools like Python, Marimo, and Plotly. 
+        - Eager to apply analytical skills to real-world financial challenges.
+
+        **Education:**
+        *   **BSc Accounting & Finance**, Bayes Business School (2025 - Present)
+        *   *Relevant Modules:* Introduction to Data Science and AI Tools, Financial Accounting.
+
+        **Skills:**
+        *   🐍 Python Programming
+        *   📊 Data Visualization
+        *   📉 Financial Modeling
+        """
+        )
+
+
+    # --- Tab 2: The Interactive Analysis (Inputs + Plot) ---
+    # Vertically stack the inputs and the chart
+    tab_data_content = mo.vstack([
+        mo.md("## 📊 Interactive Credit Risk Analyzer"),
+        # create an informational callout box with the instruction text inside
+        mo.callout(mo.md("Use the filters below to explore the relationship between Borrowing Costs and Credit Risk."), kind="info"),
+        # horizontally arrange two UI elements (sector_dropdown and cap_slider) in a row.
+        mo.hstack([sector_dropdown, cap_slider], justify="center", gap=2),
+        chart_element
+        ])
+
+
+    # --- Tab 3: Hobbies & Interests ---
+    # Combining text and the travel map
+    tab_personal = mo.vstack([
+        mo.md("## 🌍 My Hobbies: Travel & Photography"),
+        mo.md("When I'm not analyzing company financials, I love exploring the world."),
+        mo.ui.plotly(fig_travel)
+        ])
+    return tab_cv, tab_data_content, tab_personal
+
+
+@app.cell
+def _(mo, tab_cv, tab_data_content, tab_personal):
+    # 6: Assemble and display the multi-tab webpage
+
+    # Create the clickable menu of tabs and assign contents defined above to each tab
+    app_tabs = mo.ui.tabs({
+        "📄 About Me": tab_cv,
+        "📊 Passion Projects": tab_data_content, 
+        "✈️ Personal Interests": tab_personal
+        })
+
+    # Display the final app
+    mo.md(
+        f"""
+        # **Jane Doe** 
+        ---
+        {app_tabs}
+        """)
     return
 
 
